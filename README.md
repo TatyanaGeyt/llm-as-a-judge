@@ -8,6 +8,7 @@
 chmod +x set_env.sh
 chmod +x compute-criterias.sh
 chmod +x llm-as-a-judge.sh
+chmod +x ratings.sh
 ```
 
 ### Этап 1
@@ -39,3 +40,11 @@ chmod +x llm-as-a-judge.sh
 5. `only_answers` - сравнение ответов без указания критериев
 
 Добавить промпт можно в файл `artifacts/prompts/prompts.py` по аналогии с уже добавленными
+
+### Этап 4
+
+Получение elo-рейтингов.
+```
+./ratings.sh --prompt '...'
+```
+Реётинги появляются в `artifacts/judge_evaluation_results/{prompt}/ratings.json` и `artifacts/judge_evaluation_results/{prompt}/ratings.csv`

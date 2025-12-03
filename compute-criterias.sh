@@ -14,5 +14,7 @@ else
     exit 1
 fi
 
+export PYTHONPATH="${PYTHONPATH}:$(pwd)"
+
 # Запуск python
 python "${REPO_DIR}/src/ev_criteria.py"

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Скрипт загружает переменные из .env и запускает python src/ev_judge.py
+# Скрипт загружает переменные из .env и запускает python src/ev_ratings.py
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -17,4 +17,4 @@ fi
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
 # Запуск python
-python "${REPO_DIR}/src/ev_judge.py" "$@"
+python "${REPO_DIR}/src/ev_ratings.py" "$@"

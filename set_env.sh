@@ -6,4 +6,4 @@
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 # Запускаем python-скрипт с переданными аргументами
-python "${REPO_DIR}/set_env.py" "$@"
+python "${REPO_DIR}/src/set_env.py" "$@"

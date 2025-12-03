@@ -47,7 +47,7 @@ if __name__ == '__main__':
     cross_ev = generate(
         cross_data,
         which_prompt=args.prompt,
-        task=f'judge_evaluation_results{args.prompt}',
+        task=f'judge_evaluation_results/{args.prompt}',
         num_procs=20,
         judge_model_name='Qwen3-235B-A22B-Instruct-2507',
         battle=True

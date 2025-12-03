@@ -90,13 +90,13 @@ def cross_battle_join(
 
 
 def setup_logger(log_name):
-    log_dir = f"{os.environ['REPO_PATH']}/logs"
+    log_dir = Path(f"{os.environ['REPO_PATH']}/logs")
     log_dir.mkdir(exist_ok=True)
 
     log_name = Path(__file__).stem
 
     log_file = log_dir / f"{log_name}.log"
-    log_file_dir = Path(log_file).parent
+    log_file_dir = log_file.parent
     log_file_dir.mkdir(exist_ok=True)
 
     logging.basicConfig(
