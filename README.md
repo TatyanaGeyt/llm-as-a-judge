@@ -39,7 +39,9 @@ chmod +x ratings.sh
 4. `answers_extracting_crit` - оценка по ответам, определяя соответствие критериям
 5. `only_answers` - сравнение ответов без указания критериев
 
-Добавить промпт можно в файл `artifacts/prompts/prompts.py` по аналогии с уже добавленными
+Добавить промпт можно в файл `artifacts/prompts/prompts.py` по аналогии с уже добавленными.
+
+**user mode**: пользователь может добавить свой собственный `prompt`. для этого необходимо создать соответстующую функцию в `artifacts/prompts/user_prompts.py`. 
 
 ### Этап 4
 
@@ -47,4 +49,4 @@ chmod +x ratings.sh
 ```
 ./ratings.sh --prompt '...'
 ```
-Реётинги появляются в `artifacts/judge_evaluation_results/{prompt}/ratings.json` и `artifacts/judge_evaluation_results/{prompt}/ratings.csv`
+Рейтинги появляются в `artifacts/judge_evaluation_results/{prompt}/ratings.json` и `artifacts/judge_evaluation_results/{prompt}/ratings.csv`
