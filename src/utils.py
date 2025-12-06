@@ -89,24 +89,54 @@ def cross_battle_join(
     return final_data
 
 
-def setup_logger(log_name):
-    log_dir = Path(f"{os.environ['REPO_PATH']}/logs")
-    log_dir.mkdir(exist_ok=True)
+# def setup_logger(log_name=''):
+#     log_dir = Path(f"{os.environ['REPO_PATH']}/logs")
+#     log_dir.mkdir(parents=True, exist_ok=True)
 
-    log_name = Path(__file__).stem
+#     if not log_name:
+#         log_name = Path(__file__).stem
+
+#     log_file = log_dir / f"{log_name}.log"
+#     log_file_dir = log_file.parent
+#     log_file_dir.mkdir(parents=True, exist_ok=True)
+
+#     logging.basicConfig(
+#         filename=str(log_file),
+#         level=logging.INFO,
+#         format="%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+#     )
+
+#     log = logging.getLogger(log_name)
+#     log.info('----------------------------------------------------------------------------------------')
+
+#     return log
+
+
+def setup_logger(log_name: str):
+    log_dir = Path(os.environ["REPO_PATH"]) / "logs"
+    log_dir.mkdir(parents=True, exist_ok=True)
 
     log_file = log_dir / f"{log_name}.log"
-    log_file_dir = log_file.parent
-    log_file_dir.mkdir(exist_ok=True)
+    log_file.parent.mkdir(parents=True, exist_ok=True)
 
-    logging.basicConfig(
-        filename=str(log_file),
-        level=logging.INFO,
-        format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
-        encoding="utf-8"
-    )
+    # создаём логер
+    logger = logging.getLogger(log_name)
+    logger.setLevel(logging.INFO)
 
-    return logging.getLogger(log_name)
+    # если handler'ы уже есть — не добавляем снова (иначе дублирование строк)
+    if not logger.handlers:
+        handler = logging.FileHandler(log_file, encoding="utf-8")
+        formatter = logging.Formatter(
+            "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
+        )
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+    logger.propagate = False  # чтобы не уходило в root-logger
+    logger.info('-' * 88)
+
+    return logger
+
 
 
 def get_model_name(sample):

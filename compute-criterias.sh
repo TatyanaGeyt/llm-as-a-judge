@@ -17,4 +17,4 @@ fi
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
 # Запуск python
-python "${REPO_DIR}/src/ev_criteria.py"
+python "${REPO_DIR}/src/ev_criteria.py" "$@"

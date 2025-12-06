@@ -1,29 +1,30 @@
-import requests
-import os
 from typing import Dict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 from pathlib import Path
-from artifacts.prompts import prompts
+import requests
+import os
+REPO_PATH = os.environ['REPO_PATH']
+os.chdir(REPO_PATH)
+
+from artifacts.prompts import prompts, user_prompts
 from src.utils import get_coords, setup_logger, write_json
 
 
-REPO_PATH = os.environ['REPO_PATH']
-
 def create_message(sample: Dict, which_prompt: str):
     instruction_system = 'You are a meticulous and impartial assistant designed to evaluate the quality of language model responses. Your task is to follow a strict, step-by-step evaluation procedure to respond.'
-    user_content = getattr(prompts, which_prompt)(sample)
+    user_content = which_prompt(sample)
     return [
         {'role': 'system', 'content': instruction_system},
         {'role': 'user', 'content': user_content},
     ]
 
 
-def make_request(sample, judge_model_name):
+def make_request(sample, judge_model_name, which_prompt):
     
-    msg = create_message(sample)
+    msg = create_message(sample, which_prompt)
     r = requests.post(
-        f'{os.environ['API_BASE']}/v1/chat/completions',
+        f'{os.environ["API_BASE"]}/v1/chat/completions',
         json={
             'messages': msg,
             'model': judge_model_name,
@@ -77,11 +78,11 @@ def generate_batch(
             try:
                 result = future.result()
                 if 'error' in result.keys():
-                    raise ValueError(f'request_error CODE {result["error"]}: {result['details']}')
-                results_ordered[idx] = coords | result
+                    raise ValueError(f'request_error CODE {result["error"]}: {result["details"]}')
+                results_ordered[idx] = {**coords, **result}
                 log.info(f'[{idx}] ok')
             except Exception as e:
-                log.error(f"Error in task {idx}: {e}", 'ERROR')
+                log.error(f"Error in task {idx}: {e}")
                 results_ordered[idx] = {
                     'id': idx,
                     'error': str(e)
@@ -100,17 +101,18 @@ def generate_for_model(
     battle=False
 ):
     log_dir = Path(REPO_PATH) / f'logs/{task}'
-    log_dir.mkdir(exist_ok=True)
+    log_dir.mkdir(parents=True, exist_ok=True)
 
     if battle:
         results = {}
         for r in answ_data: # против каждого baseline (r)
             if not log:
-                log = setup_logger(f'{task}/{model}_{r}.log')
+                log = setup_logger(f'{task}/{model}_{r}')
                 log.info(f'Start')
 
             res = generate_batch(answ_data[r], num_procs, judge_model_name, log, which_prompt)
             res = check_requests(
+                model,
                 res,
                 answ_data,
                 task,
@@ -120,16 +122,17 @@ def generate_for_model(
             )
 
             res_dir = Path(REPO_PATH) / f'artifacts/{task}'
-            res_dir.mkdir(exist_ok=True)
+            res_dir.mkdir(parents=True, exist_ok=True)
             write_json(f'{REPO_PATH}/artifacts/{task}/{model}_{r}.json', res, log)
             results[r] = res
     else:
         if not log:
-            log = setup_logger(f'{task}/{model}.log')
+            log = setup_logger(f'{task}/{model}')
             log.info(f'Start')
 
         res = generate_batch(answ_data, num_procs, judge_model_name, log, which_prompt)
         res = check_requests(
+            model,
             res,
             answ_data,
             task,
@@ -139,7 +142,7 @@ def generate_for_model(
         )
 
         res_dir = Path(REPO_PATH) / f'artifacts/{task}'
-        res_dir.mkdir(exist_ok=True)
+        res_dir.mkdir(parents=True, exist_ok=True)
         write_json(f'{REPO_PATH}/artifacts/{task}/{model}.json', res, log)
         results = res
 
@@ -150,19 +153,31 @@ def generate(
     data,
     which_prompt,
     task,
+    user_mode=False,
+    log='',
     num_procs=20,
     judge_model_name='Qwen3-235B-A22B-Instruct-2507',
     battle=False
 ):
     results = {}
-    log = setup_logger(f'{task}/total.log')
+    if not log:
+        log = setup_logger(f'{which_prompt}/generate')
+
+    if user_mode:
+        func = getattr(user_prompts, which_prompt, None)
+    else:
+        func = getattr(prompts, which_prompt, None)
     
+    if not callable(func):
+        raise TypeError(f"Attribute '{which_prompt}' is not a callable function in prompts module")
+    log.info(f'[generate] checking prompt function: OK')
+
     for m in data:
         try:
             res = generate_for_model(
                 model=m,
                 answ_data=data[m],
-                which_prompt=which_prompt,
+                which_prompt=func,
                 task=task,
                 num_procs=num_procs,
                 judge_model_name=judge_model_name,
@@ -178,6 +193,7 @@ def generate(
 
 
 def check_requests(
+    model, 
     check_data, 
     source_data,
     task,
@@ -185,39 +201,39 @@ def check_requests(
     num_procs,
     judge_model_name
 ):
-    log = setup_logger(f'{task}/restart.log')
+    log = setup_logger(f'{task}/restart')
 
     restart = True
     iter = 0
     while restart:
         log.info(f'[RESTART] iteration {iter}')
         restart = False
-        for m in check_data:
-            good_tasks = [
-                d for d in check_data[m]
-                if 'error' not in d.keys()
-            ]
-            restart_id = [
-                d['id'] for d in check_data[m]
-                if 'error' in d.keys()
-            ]
-            if not restart_id:
-                continue
-
-            restart = True
-            log.info(f'[RESTART] model {m}: {restart_id}')
-            
-            restart_data = [
-                d for d in source_data[m]
-                if d['id'] in restart_id
-            ]
-            good_tasks += generate_batch(
-                samples_batch=restart_data,
-                num_procs=num_procs,
-                judge_model_name=judge_model_name,
-                log=log,
-                which_prompt=which_prompt
-            )
-            check_data[m] = sorted(good_tasks, key=lambda x: x['id'])
-            iter += 1
+        restart_id = [
+            d['id'] for d in check_data
+            if 'error' in d.keys()
+        ]
+        if not restart_id:
+            continue
+        
+        good_tasks = [
+            d for d in check_data
+            if 'error' not in d.keys()
+        ]
+        restart = True
+        log.info(f'[RESTART] model {model}: {restart_id}')
+        
+        restart_data = [
+            d for d in source_data
+            if d['id'] in restart_id
+        ]
+        good_tasks += generate_batch(
+            samples_batch=restart_data,
+            num_procs=num_procs,
+            judge_model_name=judge_model_name,
+            log=log,
+            which_prompt=which_prompt
+        )
+        check_data = sorted(good_tasks, key=lambda x: x['id'])
+        iter += 1
+    log.info(f'[RESTART] no more errors')
     return check_data

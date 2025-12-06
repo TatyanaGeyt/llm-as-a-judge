@@ -48,7 +48,7 @@ You will be given:
 {instruction}
 
 **Model answer**:
-"""{m_answer}"""
+"""{answer}"""
 
 **Decision rules**:
 
