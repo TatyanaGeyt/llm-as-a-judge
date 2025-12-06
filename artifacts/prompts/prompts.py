@@ -38,6 +38,41 @@ Now produce ONLY the JSON object and nothing else.
 )
 
 
+def plus_minus_criterias(sample):
+    return '''You are an impartial evaluator.
+Your task is to assess a Russian-language answer produced by another model.
+
+You will be given:
+
+**Prompt given to the model**:
+{instruction}
+
+**Model answer**:
+"""{m_answer}"""
+
+**Decision rules**:
+
+- Analyze the model's response: highlight **advantages** (for example, clarity, correctness, completeness, reasoning quality, style, usefulness, etc.) and **disadvantages** (for example, factual inaccuracy, lack of an answer to the question posed, correspondence to the answer, lack of logic, excessive formatting, too long an answer, etc.) **of the answer**.
+- Include only factual observations about the given answer.
+- Do NOT provide explanations, reasoning, or commentary.
+- Do not rewrite or improve the original answer: you must **only evaluate** it.
+
+**Output rules**:
+- Write all advantages and disadvantages in Russian.
+- Produce a JSON object with two arrays:
+{{
+    "advantages": [...], 
+    "disadvantages": [...]
+}}
+- Return ONLY a valid JSON object.
+
+Now produce ONLY the JSON object and nothing else.
+'''.format(
+    instruction=sample['instruction'],
+    answer=sample['output']
+)
+
+
 def only_crit(sample):
     return '''You are an impartial evaluator. You will be given two sets of rubric-based scores:
 
