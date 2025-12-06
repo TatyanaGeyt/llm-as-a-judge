@@ -21,14 +21,13 @@ def create_message(sample: Dict, which_prompt: str):
 
 
 def make_request(sample, judge_model_name, which_prompt):
-    
     msg = create_message(sample, which_prompt)
     r = requests.post(
         f'{os.environ["API_BASE"]}/v1/chat/completions',
         json={
             'messages': msg,
             'model': judge_model_name,
-            'max_tokens': 128,
+            'max_tokens': 256,
             'temperature': 0.0,
             'top_p':  0.9,
             'top_k': 40,
@@ -80,7 +79,7 @@ def generate_batch(
                 if 'error' in result.keys():
                     raise ValueError(f'request_error CODE {result["error"]}: {result["details"]}')
                 results_ordered[idx] = {**coords, **result}
-                log.info(f'[{idx}] ok')
+                # log.info(f'[{idx}] ok')
             except Exception as e:
                 log.error(f"Error in task {idx}: {e}")
                 results_ordered[idx] = {
@@ -103,13 +102,14 @@ def generate_for_model(
     log_dir = Path(REPO_PATH) / f'logs/{task}'
     log_dir.mkdir(parents=True, exist_ok=True)
 
+    log.info(f'[generate_for_model] Start for model {model}')
     if battle:
         results = {}
         for r in answ_data: # против каждого baseline (r)
             if not log:
                 log = setup_logger(f'{task}/{model}_{r}')
-                log.info(f'Start')
 
+            log.info(f"[generate_for_model] Start evaluating '{model}' & '{r}'")
             res = generate_batch(answ_data[r], num_procs, judge_model_name, log, which_prompt)
             res = check_requests(
                 model,
@@ -181,14 +181,14 @@ def generate(
                 task=task,
                 num_procs=num_procs,
                 judge_model_name=judge_model_name,
-                battle=battle
+                battle=battle,
+                log=log
             )
             log.info(f'Successfully got res for model {m}')
             results[m] = res
         except Exception as e:
             log.error(f'{e}')
 
-    write_json(f'{REPO_PATH}/artifacts/{task}/total_criteria.json', results, log)
     return results
 
 

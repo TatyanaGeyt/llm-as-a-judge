@@ -65,12 +65,56 @@ You will be given:
     "disadvantages": [...]
 }}
 - Return ONLY a valid JSON object.
+- Be brief, write **concisely**. 
+- List **no more** than 3 advantages and 3 disadvantages, ** which you consider the most important**.
 
 Now produce ONLY the JSON object and nothing else.
 '''.format(
     instruction=sample['instruction'],
     answer=sample['output']
 )
+
+
+def plus_minus_judge(sample):
+    return '''You are an impartial evaluator.
+
+You will be given an instruction and two sets of characteristics (advantages and disadvantages) describing the quality of two model answers to this instrustion, in the format:
+{{
+    "advantages": [...],
+    "disadvantages": [...]
+}}
+
+**instruction**:
+{instriction}
+
+**Model M characteristics**:
+{m_scores}
+
+**Model R characteristics**:
+{r_scores}
+
+**Your task**: Determine which model performed better overall based on its advantages and disadvantages.
+
+**Decision criteria**:
+- Compare the two models strictly by the listed advantages and disadvantages.
+- Characteristics related to **relevance**, **completeness**, **correctness**, and **usefulness** must have the strongest influence on the final decision.
+
+**Output rules**:
+- Respond with **a tuple** containing exactly two elements:
+  1. A single character:
+     - `"M"` if Model M performed better overall
+     - `"R"` if Model R performed better overall
+  2. A floating-point number between 0.01 and 0.99 representing your confidence in the decision.
+     - Do *not* output 0.0, 0.5, or 1.0.
+
+- Output **only** the tuple. No explanations, comments, or extra text.
+
+Now determine the better response.
+'''.format(
+        instriction=sample['instruction'],
+        m_scores = sample['model_scores'],
+        r_scores = sample['reference_scores']
+    )
 
 
 def only_crit(sample):
