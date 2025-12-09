@@ -50,3 +50,5 @@ chmod +x ratings.sh
 ./ratings.sh --prompt '...'
 ```
 Рейтинги появляются в `artifacts/judge_evaluation_results/{prompt}/ratings.json` и `artifacts/judge_evaluation_results/{prompt}/ratings.csv`
+
+**style control**: можно включить опцию подсчёта рейтингов с учётом контроля стиля с помощью флага `--style`
