@@ -84,8 +84,21 @@ def cross_battle_join(
                     "model_scores": model_crit[m_name][idx]['output'],
                     "reference_output": r_answers[idx]["output"],
                     "reference_scores": ref_crit[r_name][idx]['output'],
+                    'reverse': False
+                }
+                rev_entry = {
+                    "id": idx,
+                    "instruction": m_answer["instruction"],
+                    "model": r_name,
+                    "r": m_name,
+                    "model_output": r_answers[idx]["output"],
+                    "model_scores": ref_crit[r_name][idx]['output'],
+                    "reference_output": m_answer["output"],
+                    "reference_scores": model_crit[m_name][idx]['output'],
+                    'reverse': True
                 }
                 final_data[m_name][r_name].append(entry)
+                final_data[m_name][r_name].append(rev_entry)
     return final_data
 
 
@@ -144,6 +157,8 @@ def get_model_name(sample):
         return sample['generator']
     if 'model' in sample:
         return sample['model']
+    if 'r' in sample:
+        return sample['r']
     raise ValueError(f"Can not get model name from sample {sample}")
 
 

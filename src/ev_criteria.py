@@ -41,6 +41,19 @@ if __name__ == '__main__':
     )
     log.info(f'[main] Loaded data for baselines')
 
+    model_data = {
+        m: model_data[m]
+        for m in list(model_data.keys())
+        if m != 'llama3-70b'
+    }
+    ref_data = {
+        m: ref_data[m]
+        for m in list(ref_data.keys())
+        if m != 'gigachat_max_26.20_uncen'
+    }
+    # model_data = {'llama3-70b': model_data['llama3-70b']}
+    # ref_data = {'gigachat_max_26.20_uncen': ref_data['gigachat_max_26.20_uncen']}
+
     res_dir = Path(REPO_PATH) / f'artifacts/{args.prompt}/models'
     res_dir.mkdir(parents=True, exist_ok=True)
     res_dir = Path(REPO_PATH) / f'artifacts/{args.prompt}/baselines'
